@@ -142,6 +142,25 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">"
 const cnt = b => b.visits.reduce((a, v) => a + (v.s || 1), 0);
 const active = () => state.boards.find(b => !b.ended);
 
+const t = new Date();
+const todayStr = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+const defaultDate = (todayStr >= MIN_DATE && todayStr <= MAX_DATE) ? todayStr : MIN_DATE;
+let lastValidDate = defaultDate;
+
+function enforceDateRange() {
+  const val = $("fDate").value;
+  if (!val) return;
+  if (val < MIN_DATE || val > MAX_DATE) {
+    alert("관극 날짜는 2026년 10월 1일부터 12월 13일까지만 선택할 수 있어요.");
+    $("fDate").value = lastValidDate;
+  } else {
+    lastValidDate = val;
+  }
+}
+
+$("fDate").addEventListener("change", enforceDateRange);
+$("fDate").addEventListener("input", enforceDateRange);
+
 function getMiles(board) {
   const r8 = (board && board.reward8) ? board.reward8 : "지정 폴라로이드 1매";
   const short8 = r8.includes("OST") ? "미니 OST" : "폴라 1매";
@@ -225,9 +244,9 @@ $("add").onclick = () => {
   const cur = active();
   const date = $("fDate").value;
   if (!cur) return;
-  if (!date) { $("fDate").focus(); return; }
-  if (date < MIN_DATE || date > MAX_DATE) {
+  if (!date || date < MIN_DATE || date > MAX_DATE) {
     alert("관극 날짜는 2026년 10월 1일부터 12월 13일까지만 선택할 수 있어요.");
+    $("fDate").value = lastValidDate;
     $("fDate").focus();
     return;
   }
@@ -270,9 +289,7 @@ $("boards").onclick = e => {
   }
 };
 
-const t = new Date();
-const todayStr = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
-$("fDate").value = (todayStr >= MIN_DATE && todayStr <= MAX_DATE) ? todayStr : MIN_DATE;
+$("fDate").value = defaultDate;
 render();
 </script>
 </body>
