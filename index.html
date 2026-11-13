@@ -159,7 +159,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px}
       <div class="full"><label class="chk"><input type="checkbox" id="fDouble"> 더블 적립 (도장 2개 찍기)</label></div>
       <div class="full"><button class="primary" id="add">관극 기록 추가하고 도장 찍기</button></div>
     </div>
-    <p class="note">발급 기간: 2026.10.01(목) ~ 12.13(일) · 백암아트홀 로비 MD부스 기준 도장판입니다.</p>
+    <p class="note">발급 기간: 2026.10.01(목) ~ 12.13(일) · 백암아트홀</p>
   </section>
 
   <section class="card">
@@ -264,11 +264,24 @@ function render() {
   $("sNext").textContent = !cur ? "새 카드 필요" : next ? `${next.n - count}개` : "달성 완료";
   $("sTotal").textContent = `${total}회`;
 
-  // 보유 혜택 현황 렌더링
+// 보유 혜택 현황 렌더링
   let totalClaimed = 0;
+  const is8Reward = name => name === "지정 폴라로이드 1매" || name === "미니 실황 OST";
+
   $("invGrid").innerHTML = Object.entries(inv).map(([name, stat]) => {
-    const rem = Math.max(0, stat.claimed - stat.used);
     totalClaimed += stat.claimed;
+
+    // 8회 특전(폴라로이드, 미니 OST)인 경우: 총 수령만 표시
+    if (is8Reward(name)) {
+      return `<div class="inv-box ${stat.claimed > 0 ? "has" : ""}">
+        <span>${name}</span>
+        <b>${stat.claimed}개 <small style="display:inline;font-weight:400">수령</small></b>
+        <small>총 수령 ${stat.claimed}개</small>
+      </div>`;
+    }
+
+    // 4회·6회 할인권인 경우: 잔여 / 수령 / 사용 표시
+    const rem = Math.max(0, stat.claimed - stat.used);
     return `<div class="inv-box ${rem > 0 ? "has" : ""}">
       <span>${name}</span>
       <b>${rem}개 <small style="display:inline;font-weight:400">남음</small></b>
@@ -277,10 +290,11 @@ function render() {
   }).join("");
   $("totalClaimedTag").textContent = `총 ${totalClaimed}개 수령`;
 
-  // 관극 추가 시 사용할 혜택 드롭다운 갱신
+  // 관극 추가 시 사용할 혜택 드롭다운 갱신 (할인권만 선택 가능하도록 제외)
   const prevSel = $("fUseBenefit").value;
   let opts = `<option value="">사용 안 함</option>`;
   Object.entries(inv).forEach(([name, stat]) => {
+    if (is8Reward(name)) return; // 8회 특전은 사용 목록에서 제외
     const rem = stat.claimed - stat.used;
     if (rem > 0) {
       opts += `<option value="${esc(name)}">${esc(name)} 사용 (현재 ${rem}개 보유)</option>`;
