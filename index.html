@@ -8,9 +8,10 @@
 :root{
   --bg:#f2f5f8; --card:#ffffff; --ink:#1d2b38; --sub:#647585; --line:#dce3eb;
   --sky:#3f5e7a; --sky2:#5a7d9c; --star:#e2c275; --soft:#e7eff6; --empty:#f5f8fb;
+  --danger:#c94a4a;
 }
 @media (prefers-color-scheme:dark){
-  :root{--bg:#11171d; --card:#18212a; --ink:#edf2f7; --sub:#94a5b5; --line:#283542; --soft:#212e3b; --empty:#1d2833; --sky2:#7399ba}
+  :root{--bg:#11171d; --card:#18212a; --ink:#edf2f7; --sub:#94a5b5; --line:#283542; --soft:#212e3b; --empty:#1d2833; --sky2:#7399ba; --danger:#e06c6c}
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;line-height:1.5}
@@ -67,16 +68,18 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px}
 .primary{background:var(--sky2);color:#fff;padding:12px 18px;font-weight:700;width:100%}
 .primary:hover{filter:brightness(1.08)}
 .primary:disabled{opacity:.5;cursor:not-allowed}
-.ghost{background:var(--soft);color:var(--ink);padding:10px 16px;font-weight:600}
+.ghost{background:var(--soft);color:var(--ink);padding:8px 14px;font-weight:600;font-size:13px}
 .chk{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--ink);margin:0;cursor:pointer}
 .chk input{width:20px;height:20px;accent-color:var(--sky2)}
 .dbl{font-size:11px;background:var(--star);color:#2d2308;border-radius:99px;padding:0 7px;margin-left:4px;font-weight:700}
 .small{background:none;color:var(--sub);padding:2px 6px;font-size:12px;text-decoration:underline}
+.small.danger{color:var(--danger)}
 .board{border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:12px}
 .board.cur{border-color:var(--sky2)}
 .board .meta{font-size:13px;color:var(--sub);margin:0 0 10px}
 .board .stamps{margin:0 0 4px;gap:6px}
 .board .st{font-size:11px}
+.board-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
 .log{list-style:none;margin:8px 0 0;padding:0;font-size:13px}
 .log li{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
 @media (max-width:640px){
@@ -112,12 +115,12 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px}
     <h2>관극 기록 추가</h2>
     <div class="form">
       <div><label for="fDate">관극 날짜 (10/1 ~ 12/13)</label><input id="fDate" type="date" min="2026-10-01" max="2026-12-13"></div>
-      <div><label for="fRound">회차 / 시간 (선택)</label><input id="fRound" placeholder="예: 19:30 / 낮공"></div>
-      <div class="full"><label for="fNote">기록 메모 (선택)</label><input id="fNote" placeholder="함께 본 캐스팅이나 간단한 메모"></div>
+      <div><label for="fRound">회차 / 시간 (선택)</label><input id="fRound" placeholder="예: 20:00 / 낮공"></div>
+      <div class="full"><label for="fNote">기록 메모 (선택)</label><input id="fNote" placeholder="간단한 메모"></div>
       <div class="full"><label class="chk"><input type="checkbox" id="fDouble"> 더블 적립 (도장 2개 찍기)</label></div>
       <div class="full"><button class="primary" id="add">관극 기록 추가하고 도장 찍기</button></div>
     </div>
-    <p class="note">발급 기간: 2026.10.01(목) ~ 12.13(일) · 백암아트홀 로비 MD부스 기준 도장판입니다.</p>
+    <p class="note">발급 기간: 2026.10.01(목) ~ 12.13(일) · 백암아트홀 </p>
   </section>
 
   <section class="card">
@@ -218,13 +221,19 @@ function render() {
     const log = b.visits.map((v, i) =>
       `<li><span>${i + 1}회${v.s === 2 ? '<em class="dbl">더블 +2</em>' : ""} · ${esc(v.date)}${v.round ? " · " + esc(v.round) : ""}${v.note ? " — " + esc(v.note) : ""}</span>
        <button class="small" data-del="${b.id}:${i}">삭제</button></li>`).join("");
+    const leftAction = !b.ended
+      ? `<button class="small" data-end="${b.id}">이 카드 종료하기</button>`
+      : c < MAX
+        ? `<button class="ghost" data-open="${b.id}">이 카드에 다시 적립하기</button>`
+        : `<span></span>`;
     return `<div class="board${b.ended ? "" : " cur"}">
       <div class="top"><b>SPACE SKY Visitor Card #${b.id}</b><span class="tag">${b.ended ? "종료" : "진행 중"}</span></div>
       <p class="meta">${c}/${MAX}개 · 혜택 ${got}개 달성 · 8회 선택 혜택: <b>${esc(b.reward8 || "지정 폴라로이드 1매")}</b></p>
       <div class="stamps">${stampsHTML(c, false, bMiles)}</div>
       ${log ? `<ul class="log">${log}</ul>` : ""}
-      <div style="margin-top:8px">
-        ${!b.ended ? `<button class="small" data-end="${b.id}">이 카드 종료하기</button>` : c < MAX ? `<button class="ghost" data-open="${b.id}">이 카드에 다시 적립하기</button>` : ""}
+      <div class="board-actions">
+        ${leftAction}
+        <button class="small danger" data-delboard="${b.id}">이 카드 삭제하기</button>
       </div>
     </div>`;
   }).join("");
@@ -286,6 +295,14 @@ $("boards").onclick = e => {
   if (d.end) {
     const b = state.boards.find(x => x.id === +d.end);
     if (b && confirm("이 카드를 종료할까요?")) { b.ended = true; save(); render(); }
+  }
+  if (d.delboard) {
+    const id = +d.delboard;
+    const idx = state.boards.findIndex(x => x.id === id);
+    if (idx !== -1 && confirm(`SPACE SKY Visitor Card #${id}을(를) 삭제할까요?\n이 카드에 찍힌 관극 기록도 모두 함께 삭제됩니다.`)) {
+      state.boards.splice(idx, 1);
+      save(); render();
+    }
   }
 };
 
