@@ -24,8 +24,7 @@ header::after{
   content:"✦ ✧ · ˚ ✦";position:absolute;top:18px;right:24px;font-size:14px;letter-spacing:4px;opacity:.65;
 }
 header small{letter-spacing:.14em;font-size:12px;opacity:.85;display:inline-flex;align-items:center;gap:6px}
-header h1{margin:6px 0 6px;font-size:36px;line-height:1.15;font-family:Georgia,"Times New Roman","Noto Serif KR",serif;letter-spacing:.01em}
-header p{margin:0;opacity:.92;font-size:15px}
+header h1{margin:6px 0 0;font-size:36px;line-height:1.15;font-family:Georgia,"Times New Roman","Noto Serif KR",serif;letter-spacing:.01em}
 .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:16px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
 .stats .card{margin:0;padding:16px 18px}
@@ -93,7 +92,6 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px}
   <header>
     <small>✦ FOR SPACE SKY VISITORS</small>
     <h1>SPACE SKY Visitor Card</h1>
-    <p>관극을 기록하면 도장이 차곡차곡 쌓여요.</p>
   </header>
 
   <section class="stats">
@@ -113,7 +111,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px}
   <section class="card">
     <h2>관극 기록 추가</h2>
     <div class="form">
-      <div><label for="fDate">관극 날짜</label><input id="fDate" type="date"></div>
+      <div><label for="fDate">관극 날짜 (10/1 ~ 12/13)</label><input id="fDate" type="date" min="2026-10-01" max="2026-12-13"></div>
       <div><label for="fRound">회차 / 시간 (선택)</label><input id="fRound" placeholder="예: 19:30 / 낮공"></div>
       <div class="full"><label for="fNote">기록 메모 (선택)</label><input id="fNote" placeholder="함께 본 캐스팅이나 간단한 메모"></div>
       <div class="full"><label class="chk"><input type="checkbox" id="fDouble"> 더블 적립 (도장 2개 찍기)</label></div>
@@ -131,6 +129,8 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px}
 
 <script>
 const MAX = 8;
+const MIN_DATE = "2026-10-01";
+const MAX_DATE = "2026-12-13";
 const KEY = "spacesky-visitor-card-v1";
 let state;
 try { state = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
@@ -226,6 +226,11 @@ $("add").onclick = () => {
   const date = $("fDate").value;
   if (!cur) return;
   if (!date) { $("fDate").focus(); return; }
+  if (date < MIN_DATE || date > MAX_DATE) {
+    alert("관극 날짜는 2026년 10월 1일부터 12월 13일까지만 선택할 수 있어요.");
+    $("fDate").focus();
+    return;
+  }
   const dbl = $("fDouble").checked;
   const s = Math.min(dbl ? 2 : 1, MAX - cnt(cur));
   cur.visits.push({date, round:$("fRound").value.trim(), note:$("fNote").value.trim(), s});
@@ -266,7 +271,8 @@ $("boards").onclick = e => {
 };
 
 const t = new Date();
-$("fDate").value = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+const todayStr = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+$("fDate").value = (todayStr >= MIN_DATE && todayStr <= MAX_DATE) ? todayStr : MIN_DATE;
 render();
 </script>
 </body>
