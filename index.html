@@ -8,10 +8,10 @@
 :root{
   --bg:#f2f5f8; --card:#ffffff; --ink:#1d2b38; --sub:#647585; --line:#dce3eb;
   --sky:#3f5e7a; --sky2:#5a7d9c; --star:#e2c275; --soft:#e7eff6; --empty:#f5f8fb;
-  --danger:#c94a4a;
+  --danger:#c94a4a; --ok:#2f7d5b;
 }
 @media (prefers-color-scheme:dark){
-  :root{--bg:#11171d; --card:#18212a; --ink:#edf2f7; --sub:#94a5b5; --line:#283542; --soft:#212e3b; --empty:#1d2833; --sky2:#7399ba; --danger:#e06c6c}
+  :root{--bg:#11171d; --card:#18212a; --ink:#edf2f7; --sub:#94a5b5; --line:#283542; --soft:#212e3b; --empty:#1d2833; --sky2:#7399ba; --danger:#e06c6c; --ok:#52b788}
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;line-height:1.5}
@@ -34,6 +34,15 @@ header h1{margin:6px 0 0;font-size:36px;line-height:1.15;font-family:Georgia,"Ti
 h2{margin:0 0 14px;font-size:19px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .tag{font-size:12px;background:var(--soft);color:var(--sky2);padding:3px 10px;border-radius:99px;white-space:nowrap;font-weight:600}
+
+/* 보유 혜택 현황 그리드 */
+.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.inv-box{background:var(--empty);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.inv-box span{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+.inv-box b{font-size:20px;color:var(--ink)}
+.inv-box small{display:block;font-size:11px;color:var(--sub);margin-top:2px}
+.inv-box.has{border-color:var(--sky2);background:var(--soft)}
+
 .stamps{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin:8px 0 24px}
 .st{aspect-ratio:1;border-radius:50%;border:1.5px dashed var(--line);background:var(--empty);display:grid;place-items:center;font-size:13px;color:var(--sub);position:relative}
 .st.ms{border:2.5px solid var(--star);border-style:solid}
@@ -45,25 +54,35 @@ h2{margin:0 0 14px;font-size:19px}
 .bar{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:14px}
 .bar div{height:100%;background:var(--star);transition:width .3s}
 .ms-list{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
-.ms-item{border:1px solid var(--line);background:var(--empty);border-radius:12px;padding:10px 12px;font-size:14px}
+.ms-item{border:1px solid var(--line);background:var(--empty);border-radius:12px;padding:12px;font-size:14px;display:flex;flex-direction:column;justify-content:space-between;gap:8px}
 .ms-item.done{border-color:var(--star);background:var(--soft)}
 .ms-item small,.note{color:var(--sub);font-size:13px}
 .note{margin:12px 0 0}
 
+/* 수령 체크 버튼 */
+.claim-btn{
+  width:100%;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;
+  border:1px solid var(--line);background:var(--card);color:var(--sub);transition:.15s;
+}
+.claim-btn:not(:disabled):hover{border-color:var(--sky2);color:var(--ink)}
+.claim-btn.claimed{background:var(--ok);border-color:var(--ok);color:#fff}
+.claim-btn:disabled{opacity:.45;cursor:not-allowed}
+
 /* 8회 혜택 선택 버튼 */
-.reward-pick{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.reward-pick{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .pick-btn{
-  flex:1;min-width:90px;font-size:12px;padding:6px 8px;border-radius:8px;
+  flex:1;min-width:90px;font-size:11px;padding:5px 7px;border-radius:7px;
   border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:600;transition:.15s;
 }
-.pick-btn:hover{border-color:var(--sky2)}
+.pick-btn:hover:not(:disabled){border-color:var(--sky2)}
 .pick-btn.active{background:var(--sky);color:#fff;border-color:var(--sky)}
+.pick-btn:disabled{opacity:.6;cursor:not-allowed}
 
 .form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form .full{grid-column:1/-1}
 label{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
-input{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
-input:focus-visible,button:focus-visible{outline:3px solid var(--star);outline-offset:2px}
+input, select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--star);outline-offset:2px}
 button{font:inherit;cursor:pointer;border:0;border-radius:12px}
 .primary{background:var(--sky2);color:#fff;padding:12px 18px;font-weight:700;width:100%}
 .primary:hover{filter:brightness(1.08)}
@@ -72,6 +91,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px}
 .chk{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--ink);margin:0;cursor:pointer}
 .chk input{width:20px;height:20px;accent-color:var(--sky2)}
 .dbl{font-size:11px;background:var(--star);color:#2d2308;border-radius:99px;padding:0 7px;margin-left:4px;font-weight:700}
+.used-tag{font-size:11px;background:var(--soft);color:var(--sky2);border:1px solid var(--sky2);border-radius:99px;padding:0 7px;margin-left:4px;font-weight:600}
 .small{background:none;color:var(--sub);padding:2px 6px;font-size:12px;text-decoration:underline}
 .small.danger{color:var(--danger)}
 .board{border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:12px}
@@ -79,12 +99,20 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px}
 .board .meta{font-size:13px;color:var(--sub);margin:0 0 10px}
 .board .stamps{margin:0 0 4px;gap:6px}
 .board .st{font-size:11px}
+.board-claims{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.mini-claim{
+  font-size:11px;padding:4px 9px;border-radius:99px;border:1px solid var(--line);
+  background:var(--empty);color:var(--sub);font-weight:600;
+}
+.mini-claim.claimed{background:var(--ok);border-color:var(--ok);color:#fff}
+.mini-claim:disabled{opacity:.4;cursor:not-allowed}
 .board-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
 .log{list-style:none;margin:8px 0 0;padding:0;font-size:13px}
-.log li{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
+.log li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
 @media (max-width:640px){
   header h1{font-size:28px}
   .stats b{font-size:21px}
+  .inv-grid{grid-template-columns:repeat(2,1fr)}
   .stamps{grid-template-columns:repeat(4,1fr);row-gap:26px}
   .ms-list,.form{grid-template-columns:1fr}
 }
@@ -104,6 +132,12 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px}
   </section>
 
   <section class="card">
+    <div class="top"><h2>보유 혜택 현황 (잔여 / 수령)</h2><span class="tag" id="totalClaimedTag">총 0개 수령</span></div>
+    <div class="inv-grid" id="invGrid"></div>
+    <p class="note">도장판에서 혜택을 '수령 완료'로 체크하면 보유 수량이 늘어나고, 관극 기록 시 사용하면 차감돼요.</p>
+  </section>
+
+  <section class="card">
     <div class="top"><h2>진행 중인 Visitor Card</h2><span class="tag" id="curName"></span></div>
     <div id="curStamps" class="stamps"></div>
     <div class="bar"><div id="bar"></div></div>
@@ -115,12 +149,16 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px}
     <h2>관극 기록 추가</h2>
     <div class="form">
       <div><label for="fDate">관극 날짜 (10/1 ~ 12/13)</label><input id="fDate" type="date" min="2026-10-01" max="2026-12-13"></div>
-      <div><label for="fRound">회차 / 시간 (선택)</label><input id="fRound" placeholder="예: 20:00 / 낮공"></div>
-      <div class="full"><label for="fNote">기록 메모 (선택)</label><input id="fNote" placeholder="간단한 메모"></div>
+      <div><label for="fRound">회차 / 시간 (선택)</label><input id="fRound" placeholder="예: 19:30 / 낮공"></div>
+      <div class="full">
+        <label for="fUseBenefit">이번 관극에 사용한 혜택 (선택)</label>
+        <select id="fUseBenefit"></select>
+      </div>
+      <div class="full"><label for="fNote">기록 메모 (선택)</label><input id="fNote" placeholder="함께 본 캐스팅이나 간단한 메모"></div>
       <div class="full"><label class="chk"><input type="checkbox" id="fDouble"> 더블 적립 (도장 2개 찍기)</label></div>
       <div class="full"><button class="primary" id="add">관극 기록 추가하고 도장 찍기</button></div>
     </div>
-    <p class="note">발급 기간: 2026.10.01(목) ~ 12.13(일) · 백암아트홀 </p>
+    <p class="note">발급 기간: 2026.10.01(목) ~ 12.13(일) · 백암아트홀 로비 MD부스 기준 도장판입니다.</p>
   </section>
 
   <section class="card">
@@ -134,10 +172,16 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px}
 const MAX = 8;
 const MIN_DATE = "2026-10-01";
 const MAX_DATE = "2026-12-13";
-const KEY = "spacesky-visitor-card-v1";
+const KEY = "spacesky-visitor-card-v2";
 let state;
-try { state = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
-if (!state || !state.boards) state = {boards:[{id:1, visits:[], ended:false, reward8:"지정 폴라로이드 1매"}]};
+try { state = JSON.parse(localStorage.getItem(KEY)) || JSON.parse(localStorage.getItem("spacesky-visitor-card-v1")); } catch (e) {}
+if (!state || !state.boards) {
+  state = {boards:[{id:1, visits:[], ended:false, reward8:"지정 폴라로이드 1매", claimed:{4:false, 6:false, 8:false}}]};
+}
+state.boards.forEach(b => {
+  if (!b.claimed) b.claimed = {4:false, 6:false, 8:false};
+  if (!b.reward8) b.reward8 = "지정 폴라로이드 1매";
+});
 
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 const $ = id => document.getElementById(id);
@@ -164,6 +208,30 @@ function enforceDateRange() {
 $("fDate").addEventListener("change", enforceDateRange);
 $("fDate").addEventListener("input", enforceDateRange);
 
+function getInventory() {
+  const inv = {
+    "40% 할인권 1매": {claimed: 0, used: 0},
+    "50% 할인권 1매": {claimed: 0, used: 0},
+    "지정 폴라로이드 1매": {claimed: 0, used: 0},
+    "미니 실황 OST": {claimed: 0, used: 0}
+  };
+  state.boards.forEach(b => {
+    const c = cnt(b);
+    if (c >= 4 && b.claimed?.[4]) inv["40% 할인권 1매"].claimed++;
+    if (c >= 6 && b.claimed?.[6]) inv["50% 할인권 1매"].claimed++;
+    if (c >= 8 && b.claimed?.[8]) {
+      const r8 = b.reward8 || "지정 폴라로이드 1매";
+      if (inv[r8]) inv[r8].claimed++;
+    }
+    b.visits.forEach(v => {
+      if (v.usedBenefit && inv[v.usedBenefit]) {
+        inv[v.usedBenefit].used++;
+      }
+    });
+  });
+  return inv;
+}
+
 function getMiles(board) {
   const r8 = (board && board.reward8) ? board.reward8 : "지정 폴라로이드 1매";
   const short8 = r8.includes("OST") ? "미니 OST" : "폴라 1매";
@@ -189,10 +257,39 @@ function render() {
   const miles = getMiles(cur);
   const total = state.boards.reduce((a, b) => a + b.visits.length, 0);
   const next = miles.find(m => m.n > count);
+  const inv = getInventory();
 
   $("sCur").textContent = cur ? `${count} / ${MAX}` : "-";
   $("sNext").textContent = !cur ? "새 카드 필요" : next ? `${next.n - count}개` : "달성 완료";
   $("sTotal").textContent = `${total}회`;
+
+  // 보유 혜택 현황 렌더링
+  let totalClaimed = 0;
+  $("invGrid").innerHTML = Object.entries(inv).map(([name, stat]) => {
+    const rem = Math.max(0, stat.claimed - stat.used);
+    totalClaimed += stat.claimed;
+    return `<div class="inv-box ${rem > 0 ? "has" : ""}">
+      <span>${name}</span>
+      <b>${rem}개 <small style="display:inline;font-weight:400">남음</small></b>
+      <small>총 수령 ${stat.claimed}개 · 사용 ${stat.used}개</small>
+    </div>`;
+  }).join("");
+  $("totalClaimedTag").textContent = `총 ${totalClaimed}개 수령`;
+
+  // 관극 추가 시 사용할 혜택 드롭다운 갱신
+  const prevSel = $("fUseBenefit").value;
+  let opts = `<option value="">사용 안 함</option>`;
+  Object.entries(inv).forEach(([name, stat]) => {
+    const rem = stat.claimed - stat.used;
+    if (rem > 0) {
+      opts += `<option value="${esc(name)}">${esc(name)} 사용 (현재 ${rem}개 보유)</option>`;
+    }
+  });
+  $("fUseBenefit").innerHTML = opts;
+  if ([...$("fUseBenefit").options].some(o => o.value === prevSel)) {
+    $("fUseBenefit").value = prevSel;
+  }
+
   $("curName").textContent = cur ? `Visitor Card #${cur.id}` : "진행 중인 카드 없음";
   $("curStamps").innerHTML = stampsHTML(count, true, miles);
   $("bar").style.width = `${count / MAX * 100}%`;
@@ -200,15 +297,21 @@ function render() {
   const selected8 = cur ? (cur.reward8 || "지정 폴라로이드 1매") : "지정 폴라로이드 1매";
   $("msList").innerHTML = miles.map(m => {
     const isDone = count >= m.n;
+    const isClaimed = cur && cur.claimed && cur.claimed[m.n];
     const selectorHTML = m.selectable ? `
       <div class="reward-pick">
-        <button type="button" class="pick-btn ${selected8 === "지정 폴라로이드 1매" ? "active" : ""}" data-pick="지정 폴라로이드 1매" ${!cur ? "disabled" : ""}>지정 폴라로이드 1매</button>
-        <button type="button" class="pick-btn ${selected8 === "미니 실황 OST" ? "active" : ""}" data-pick="미니 실황 OST" ${!cur ? "disabled" : ""}>미니 실황 OST</button>
+        <button type="button" class="pick-btn ${selected8 === "지정 폴라로이드 1매" ? "active" : ""}" data-pick="지정 폴라로이드 1매" ${!cur || isClaimed ? "disabled" : ""}>지정 폴라로이드 1매</button>
+        <button type="button" class="pick-btn ${selected8 === "미니 실황 OST" ? "active" : ""}" data-pick="미니 실황 OST" ${!cur || isClaimed ? "disabled" : ""}>미니 실황 OST</button>
       </div>` : "";
     return `<div class="ms-item ${isDone ? "done" : ""}">
-      <b>${m.n}회 · ${m.t}</b><br>
-      <small>${m.s}${isDone ? " ✓ 달성" : ""}</small>
-      ${selectorHTML}
+      <div>
+        <b>${m.n}회 · ${m.t}</b><br>
+        <small>${m.s}${isDone ? " ✓ 달성" : ""}</small>
+        ${selectorHTML}
+      </div>
+      <button type="button" class="claim-btn ${isClaimed ? "claimed" : ""}" data-claim="${m.n}" ${!cur || !isDone ? "disabled" : ""}>
+        ${!isDone ? "도장 부족" : isClaimed ? "✓ 수령 완료 (취소 가능)" : "혜택 수령하기"}
+      </button>
     </div>`;
   }).join("");
 
@@ -217,19 +320,32 @@ function render() {
   $("boards").innerHTML = [...state.boards].reverse().map(b => {
     const c = cnt(b);
     const bMiles = getMiles(b);
-    const got = bMiles.filter(m => c >= m.n).length;
+    const claimedCnt = [4, 6, 8].filter(n => c >= n && b.claimed?.[n]).length;
     const log = b.visits.map((v, i) =>
-      `<li><span>${i + 1}회${v.s === 2 ? '<em class="dbl">더블 +2</em>' : ""} · ${esc(v.date)}${v.round ? " · " + esc(v.round) : ""}${v.note ? " — " + esc(v.note) : ""}</span>
-       <button class="small" data-del="${b.id}:${i}">삭제</button></li>`).join("");
+      `<li>
+        <span>${i + 1}회${v.s === 2 ? '<em class="dbl">더블 +2</em>' : ""}${v.usedBenefit ? `<em class="used-tag">${esc(v.usedBenefit)} 사용</em>` : ""} · ${esc(v.date)}${v.round ? " · " + esc(v.round) : ""}${v.note ? " — " + esc(v.note) : ""}</span>
+        <button class="small" data-del="${b.id}:${i}">삭제</button>
+      </li>`).join("");
+
+    const claimPills = bMiles.map(m => {
+      const unlocked = c >= m.n;
+      const done = unlocked && b.claimed?.[m.n];
+      return `<button type="button" class="mini-claim ${done ? "claimed" : ""}" data-bclaim="${b.id}:${m.n}" ${!unlocked ? "disabled" : ""}>
+        ${m.n}회(${m.l}) ${done ? "✓ 수령됨" : unlocked ? "수령 체크" : "미달성"}
+      </button>`;
+    }).join("");
+
     const leftAction = !b.ended
       ? `<button class="small" data-end="${b.id}">이 카드 종료하기</button>`
       : c < MAX
         ? `<button class="ghost" data-open="${b.id}">이 카드에 다시 적립하기</button>`
         : `<span></span>`;
+
     return `<div class="board${b.ended ? "" : " cur"}">
       <div class="top"><b>SPACE SKY Visitor Card #${b.id}</b><span class="tag">${b.ended ? "종료" : "진행 중"}</span></div>
-      <p class="meta">${c}/${MAX}개 · 혜택 ${got}개 달성 · 8회 선택 혜택: <b>${esc(b.reward8 || "지정 폴라로이드 1매")}</b></p>
+      <p class="meta">${c}/${MAX}개 · 혜택 ${claimedCnt}개 수령 · 8회 선택 혜택: <b>${esc(b.reward8 || "지정 폴라로이드 1매")}</b></p>
       <div class="stamps">${stampsHTML(c, false, bMiles)}</div>
+      <div class="board-claims">${claimPills}</div>
       ${log ? `<ul class="log">${log}</ul>` : ""}
       <div class="board-actions">
         ${leftAction}
@@ -240,12 +356,21 @@ function render() {
 }
 
 $("msList").onclick = e => {
-  const pick = e.target.dataset.pick;
   const cur = active();
-  if (pick && cur) {
+  if (!cur) return;
+  const pick = e.target.dataset.pick;
+  if (pick) {
+    if (cur.claimed?.[8]) return;
     cur.reward8 = pick;
-    save();
-    render();
+    save(); render();
+  }
+  const claim = e.target.dataset.claim;
+  if (claim) {
+    const n = Number(claim);
+    if (cnt(cur) >= n) {
+      cur.claimed[n] = !cur.claimed[n];
+      save(); render();
+    }
   }
 };
 
@@ -261,10 +386,18 @@ $("add").onclick = () => {
   }
   const dbl = $("fDouble").checked;
   const s = Math.min(dbl ? 2 : 1, MAX - cnt(cur));
-  cur.visits.push({date, round:$("fRound").value.trim(), note:$("fNote").value.trim(), s});
+  const usedBenefit = $("fUseBenefit").value;
+  cur.visits.push({
+    date,
+    round: $("fRound").value.trim(),
+    note: $("fNote").value.trim(),
+    s,
+    usedBenefit
+  });
   if (cnt(cur) >= MAX) cur.ended = true;
   $("fRound").value = $("fNote").value = "";
   $("fDouble").checked = false;
+  $("fUseBenefit").value = "";
   save(); render();
 };
 
@@ -273,16 +406,29 @@ $("newBoard").onclick = () => {
   if (cur && !confirm("진행 중인 카드를 종료하고 새 카드를 시작할까요?")) return;
   if (cur) cur.ended = true;
   const nextId = state.boards.length ? Math.max(...state.boards.map(b => b.id)) + 1 : 1;
-  state.boards.push({id:nextId, visits:[], ended:false, reward8:"지정 폴라로이드 1매"});
+  state.boards.push({id:nextId, visits:[], ended:false, reward8:"지정 폴라로이드 1매", claimed:{4:false, 6:false, 8:false}});
   save(); render();
 };
 
 $("boards").onclick = e => {
   const d = e.target.dataset;
+  if (d.bclaim) {
+    const [id, n] = d.bclaim.split(":").map(Number);
+    const b = state.boards.find(x => x.id === id);
+    if (b && cnt(b) >= n) {
+      b.claimed[n] = !b.claimed[n];
+      save(); render();
+    }
+  }
   if (d.del) {
     const [id, i] = d.del.split(":").map(Number);
     const b = state.boards.find(x => x.id === id);
-    if (b && confirm("이 관극 기록을 삭제할까요?")) { b.visits.splice(i, 1); save(); render(); }
+    if (b && confirm("이 관극 기록을 삭제할까요?")) {
+      b.visits.splice(i, 1);
+      const newC = cnt(b);
+      [4, 6, 8].forEach(n => { if (newC < n) b.claimed[n] = false; });
+      save(); render();
+    }
   }
   if (d.open) {
     const b = state.boards.find(x => x.id === +d.open);
@@ -299,7 +445,7 @@ $("boards").onclick = e => {
   if (d.delboard) {
     const id = +d.delboard;
     const idx = state.boards.findIndex(x => x.id === id);
-    if (idx !== -1 && confirm(`SPACE SKY Visitor Card #${id}을(를) 삭제할까요?\n이 카드에 찍힌 관극 기록도 모두 함께 삭제됩니다.`)) {
+    if (idx !== -1 && confirm(`SPACE SKY Visitor Card #${id}을(를) 삭제할까요?\n이 카드에 찍힌 관극 기록과 수령 혜택도 모두 함께 삭제됩니다.`)) {
       state.boards.splice(idx, 1);
       save(); render();
     }
