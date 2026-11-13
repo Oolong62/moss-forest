@@ -36,8 +36,7 @@ header h1{margin:6px 0 0;font-size:36px;line-height:1.15;font-family:Georgia,"Ti
 .stats span{font-size:13px;color:var(--sub)}
 .stats b{display:block;font-size:26px}
 h2{margin:0 0 14px;font-size:19px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.top-btns{display:flex;gap:6px;flex-wrap:wrap}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .tag{font-size:12px;background:var(--soft);color:var(--sky2);padding:3px 10px;border-radius:99px;white-space:nowrap;font-weight:600}
 
 /* 보유 혜택 현황 그리드 */
@@ -144,7 +143,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
 .cal-day.out:disabled{text-decoration:none}
 .cal-legend{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 
-/* 인앱 브라우저 호환 커스텀 모달 (confirm/alert 대체) */
+/* 인앱 브라우저 호환 커스텀 모달 */
 .modal-backdrop{
   position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;
   display:none;place-items:center;padding:16px;
@@ -236,14 +235,9 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
   <section class="card">
     <div class="top">
       <h2 style="margin:0">Visitor Card 관리</h2>
-      <div class="top-btns">
-        <button type="button" class="ghost" id="btnExport">기록 백업</button>
-        <button type="button" class="ghost" id="btnImport">기록 불러오기</button>
-        <button type="button" class="ghost" id="newBoard">새 카드 시작</button>
-      </div>
+      <button type="button" class="ghost" id="newBoard">새 카드 시작</button>
     </div>
-    <input type="file" id="importFile" accept=".json,application/json" style="display:none">
-    <p class="note">기록은 현재 열린 앱/브라우저에 저장돼요. 트위터 인앱 브라우저와 일반 브라우저(사파리·크롬)는 저장 공간이 분리되어 있으니 '기록 백업'으로 옮길 수 있어요.</p>
+    <p class="note">기록은 이 브라우저에 저장돼요. 브라우저 데이터를 지우면 사라지니 주의하세요.</p>
     <div id="boards"></div>
   </section>
 </div>
@@ -600,59 +594,6 @@ $("newBoard").onclick = async () => {
   const nextId = state.boards.length ? Math.max(...state.boards.map(b => b.id)) + 1 : 1;
   state.boards.push({id:nextId, visits:[], ended:false, reward8:"지정 폴라로이드 1매"});
   save(); render();
-};
-
-// 백업 내보내기 (.json 파일 다운로드)
-$("btnExport").onclick = async () => {
-  try {
-    const dataStr = JSON.stringify(state, null, 2);
-    const blob = new Blob([dataStr], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `spacesky-backup-${todayStr}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  } catch (e) {
-    await showModal("인앱 브라우저에서는 파일 다운로드가 제한될 수 있어요. 우측 상단 메뉴에서 '기본 브라우저로 열기'를 이용해주세요.", {confirmMode: false});
-  }
-};
-
-// 백업 불러오기
-$("btnImport").onclick = () => {
-  $("importFile").value = "";
-  $("importFile").click();
-};
-
-$("importFile").onchange = e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async ev => {
-    try {
-      const parsed = JSON.parse(ev.target.result);
-      if (!parsed || !Array.isArray(parsed.boards)) {
-        await showModal("올바른 SPACE SKY 백업 파일이 아닙니다.", {confirmMode: false});
-        return;
-      }
-      if (!(await showModal("백업 파일을 불러오면 현재 화면의 기록이 백업 데이터로 덮어씌워집니다. 계속할까요?"))) {
-        return;
-      }
-      parsed.boards.forEach(b => {
-        if (!b.reward8) b.reward8 = "지정 폴라로이드 1매";
-        if (!Array.isArray(b.visits)) b.visits = [];
-      });
-      state = parsed;
-      save();
-      render();
-      await showModal("관극 기록과 도장판을 성공적으로 복원했습니다!", {confirmMode: false});
-    } catch (err) {
-      await showModal("백업 파일을 읽는 중 오류가 발생했습니다.", {confirmMode: false});
-    }
-  };
-  reader.readAsText(file);
 };
 
 $("boards").onclick = async e => {
