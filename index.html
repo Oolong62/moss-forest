@@ -30,6 +30,7 @@ header::after{
 }
 header small{letter-spacing:.14em;font-size:12px;opacity:.85;display:inline-flex;align-items:center;gap:6px}
 header h1{margin:6px 0 0;font-size:36px;line-height:1.15;font-family:Georgia,"Times New Roman","Noto Serif KR",serif;letter-spacing:.01em}
+header .sub-title{margin:8px 0 0;font-size:13px;letter-spacing:.16em;opacity:.82;font-weight:500}
 .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:16px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
 .stats .card{margin:0;padding:16px 18px}
@@ -186,6 +187,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
 
 @media (max-width:640px){
   header h1{font-size:28px}
+  header .sub-title{font-size:11px;letter-spacing:.13em}
   .stats b{font-size:21px}
   .inv-grid{grid-template-columns:repeat(2,1fr)}
   .stamps{grid-template-columns:repeat(4,1fr);row-gap:26px}
@@ -199,6 +201,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
   <header>
     <small>✦ FOR SPACE SKY VISITORS</small>
     <h1>SPACE SKY Visitor Card</h1>
+    <p class="sub-title">MUSICAL MOSS FOREST</p>
   </header>
 
   <section class="stats">
@@ -735,7 +738,7 @@ $("btnSaveImg").onclick = async () => {
   const dpr = 2;
   const W = 720;
   const pad = 32;
-  const headerH = 128;
+  const headerH = 148;
   const cardH = 176;
   const gap = 16;
   const footerH = 44;
@@ -768,15 +771,19 @@ $("btnSaveImg").onclick = async () => {
   ctx.textAlign = "left";
   ctx.fillStyle = "rgba(255,255,255,0.85)";
   ctx.font = "600 12px sans-serif";
-  ctx.fillText("✦ FOR SPACE SKY VISITORS", pad + 26, pad + 36);
+  ctx.fillText("✦ FOR SPACE SKY VISITORS", pad + 26, pad + 34);
 
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 30px Georgia, serif";
-  ctx.fillText("SPACE SKY Visitor Card", pad + 26, pad + 74);
+  ctx.fillText("SPACE SKY Visitor Card", pad + 26, pad + 72);
+
+  ctx.fillStyle = "rgba(255,255,255,0.82)";
+  ctx.font = "500 12px sans-serif";
+  ctx.fillText("M U S I C A L   M O S S   F O R E S T", pad + 26, pad + 94);
 
   ctx.fillStyle = "rgba(255,255,255,0.92)";
   ctx.font = "600 14px sans-serif";
-  ctx.fillText(`총 ${boards.length}장 보유 · 총 관극 ${totalVisits}회 · 누적 도장 ${totalStamps}개`, pad + 26, pad + 104);
+  ctx.fillText(`총 ${boards.length}장 보유 · 총 관극 ${totalVisits}회 · 누적 도장 ${totalStamps}개`, pad + 26, pad + 124);
 
   let y = pad + headerH + 20;
   boards.forEach(b => {
