@@ -36,7 +36,8 @@ header h1{margin:6px 0 0;font-size:36px;line-height:1.15;font-family:Georgia,"Ti
 .stats span{font-size:13px;color:var(--sub)}
 .stats b{display:block;font-size:26px}
 h2{margin:0 0 14px;font-size:19px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.top-btns{display:flex;gap:6px;flex-wrap:wrap}
 .tag{font-size:12px;background:var(--soft);color:var(--sky2);padding:3px 10px;border-radius:99px;white-space:nowrap;font-weight:600}
 
 /* 보유 혜택 현황 그리드 */
@@ -86,6 +87,12 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
 .primary:disabled{opacity:.5;cursor:not-allowed}
 .ghost{background:var(--soft);color:var(--ink);padding:8px 14px;font-weight:600;font-size:13px}
 .ghost:hover{filter:brightness(0.96)}
+.save-img-btn{
+  width:100%;margin-top:16px;padding:13px 18px;font-weight:700;font-size:15px;
+  background:linear-gradient(135deg,#3d5c78,#5a7d9c);color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.save-img-btn:hover{filter:brightness(1.08)}
 .chk{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--ink);margin:0;cursor:pointer}
 .chk input{width:20px;height:20px;accent-color:var(--sky2)}
 .dbl{font-size:11px;background:var(--star);color:#2d2308;border-radius:99px;padding:0 7px;margin-left:4px;font-weight:700}
@@ -143,15 +150,15 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
 .cal-day.out:disabled{text-decoration:none}
 .cal-legend{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 
-/* 인앱 브라우저 호환 커스텀 모달 */
+/* 인앱 브라우저 호환 커스텀 모달 & 이미지 미리보기 모달 */
 .modal-backdrop{
-  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;
-  display:none;place-items:center;padding:16px;
+  position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;
+  display:none;place-items:center;padding:16px;overflow-y:auto;
 }
 .modal-backdrop.open{display:grid}
 .modal-box{
   background:var(--card);border:1px solid var(--line);border-radius:20px;
-  max-width:360px;width:100%;padding:22px;box-shadow:0 16px 36px rgba(0,0,0,.25);
+  max-width:400px;width:100%;padding:22px;box-shadow:0 16px 36px rgba(0,0,0,.25);
 }
 .modal-msg{margin:0 0 18px;font-size:15px;line-height:1.5;white-space:pre-line;color:var(--ink)}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end}
@@ -159,6 +166,13 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
 .modal-cancel{background:var(--soft);color:var(--ink)}
 .modal-ok{background:var(--sky);color:#fff}
 .modal-ok.danger{background:var(--danger)}
+
+.img-preview-box{max-width:460px;text-align:center}
+.img-preview-box img{
+  width:100%;border-radius:14px;border:1px solid var(--line);
+  margin:10px 0 12px;display:block;
+}
+.img-tip{font-size:12px;color:var(--sub);margin:0 0 14px}
 
 @media (max-width:640px){
   header h1{font-size:28px}
@@ -201,7 +215,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
     <h2>관극 기록 추가</h2>
     <div class="form">
       <div class="date-wrap" id="dateWrap">
-        <label for="fDateBtn">관극 날짜 (10/1 ~ 12/13)</label>
+        <label for="fDateBtn">관극 날짜 (10/1 ~ 12/13 · 월요일 휴관/10·5 가능)</label>
         <input id="fDate" type="hidden">
         <button type="button" class="date-btn" id="fDateBtn">
           <span id="fDateLabel">날짜 선택</span>
@@ -215,7 +229,6 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
           </div>
           <div class="cal-grid" id="calGrid"></div>
           <div class="cal-legend">
-            <span>월요일 휴관(선택 불가)</span>
             <span><b style="color:var(--sat)">토</b> · <b style="color:var(--sun)">일/공휴일</b></span>
           </div>
         </div>
@@ -225,7 +238,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
         <label for="fUseBenefit">이번 관극에 사용한 혜택 (선택)</label>
         <select id="fUseBenefit"></select>
       </div>
-      <div class="full"><label for="fNote">기록 메모 (선택)</label><input id="fNote" placeholder="캐스팅이나 간단한 메모"></div>
+      <div class="full"><label for="fNote">기록 메모 (선택)</label><input id="fNote" placeholder="함께 본 캐스팅이나 간단한 메모"></div>
       <div class="full"><label class="chk"><input type="checkbox" id="fDouble"> 더블 적립 (도장 2개 찍기)</label></div>
       <div class="full"><button type="button" class="primary" id="add">관극 기록 추가하고 도장 찍기</button></div>
     </div>
@@ -235,10 +248,16 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
   <section class="card">
     <div class="top">
       <h2 style="margin:0">Visitor Card 관리</h2>
-      <button type="button" class="ghost" id="newBoard">새 카드 시작</button>
+      <div class="top-btns">
+        <button type="button" class="ghost" id="btnExport">기록 백업</button>
+        <button type="button" class="ghost" id="btnImport">기록 불러오기</button>
+        <button type="button" class="ghost" id="newBoard">새 카드 시작</button>
+      </div>
     </div>
-    <p class="note">기록은 이 브라우저에 저장 / 브라우저 데이터를 지우면 사라지니 주의</p>
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+    <p class="note">기록은 현재 브라우저에 저장돼요. 기기를 옮기거나 데이터를 보호하려면 '기록 백업'을 눌러 파일을 저장해 두세요.</p>
     <div id="boards"></div>
+    <button type="button" class="save-img-btn" id="btnSaveImg">✦ 도장판만 모아서 이미지 저장</button>
   </section>
 </div>
 
@@ -249,6 +268,19 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
     <div class="modal-btns">
       <button type="button" class="modal-cancel" id="modalCancel">취소</button>
       <button type="button" class="modal-ok" id="modalOk">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 도장판 이미지 미리보기 및 저장 모달 -->
+<div class="modal-backdrop" id="imgModalBackdrop">
+  <div class="modal-box img-preview-box">
+    <b style="font-size:17px">SPACE SKY 도장판 이미지</b>
+    <img id="previewImg" alt="도장판 모아보기 이미지">
+    <p class="img-tip">자동 저장이 안 되는 앱에서는 위 이미지를 꾹 눌러 '사진에 저장'을 선택해 주세요.</p>
+    <div class="modal-btns" style="justify-content:center">
+      <button type="button" class="modal-cancel" id="imgModalClose">닫기</button>
+      <a id="imgDownloadLink" class="modal-ok" style="text-decoration:none;padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px" download="spacesky-stamp-cards.png">파일로 다운로드</a>
     </div>
   </div>
 </div>
@@ -284,7 +316,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">"
 const cnt = b => b.visits.reduce((a, v) => a + (v.s || 1), 0);
 const active = () => state.boards.find(b => !b.ended);
 
-// 인앱 브라우저에서도 동작하는 커스텀 모달
+// 커스텀 모달
 let modalResolver = null;
 function showModal(msg, {confirmMode = true, danger = false} = {}) {
   return new Promise(resolve => {
@@ -307,7 +339,7 @@ $("modalOk").onclick = () => closeModal(true);
 $("modalCancel").onclick = () => closeModal(false);
 $("modalBackdrop").onclick = e => { if (e.target === $("modalBackdrop")) closeModal(false); };
 
-// 날짜 유틸 및 유효성 검사
+// 날짜 유틸 (10/5 월요일 대체공휴일은 예외적으로 선택 허용)
 function parseDateStr(str) {
   const [y, m, d] = str.split("-").map(Number);
   return new Date(y, m - 1, d);
@@ -317,8 +349,9 @@ function formatDateStr(y, m, d) {
 }
 function isValidPlayDate(str) {
   if (!str || str < MIN_DATE || str > MAX_DATE) return false;
+  if (str === "2026-10-05") return true; // 10/5 대체공휴일 선택 가능
   const dow = parseDateStr(str).getDay();
-  return dow !== 1;
+  return dow !== 1; // 그 외 월요일 불가
 }
 
 const t = new Date();
@@ -360,8 +393,8 @@ function renderCalendar() {
     const dow = (firstDow + d - 1) % 7;
     const isHol = Boolean(HOLIDAYS[str]);
     const inRange = str >= MIN_DATE && str <= MAX_DATE;
-    const isMon = dow === 1;
-    const disabled = !inRange || isMon;
+    const isBlockedMon = (dow === 1 && str !== "2026-10-05");
+    const disabled = !inRange || isBlockedMon;
 
     const cls = [
       "cal-day",
@@ -371,7 +404,7 @@ function renderCalendar() {
       str === selected ? "sel" : ""
     ].filter(Boolean).join(" ");
 
-    const title = isMon ? "월요일 선택 불가" : (HOLIDAYS[str] || "");
+    const title = isBlockedMon ? "월요일 선택 불가" : (HOLIDAYS[str] || "");
     html += `<button type="button" class="${cls}" data-day="${str}" ${disabled ? "disabled" : ""} title="${esc(title)}">${d}</button>`;
   }
 
@@ -567,7 +600,7 @@ $("add").onclick = async () => {
   const date = $("fDate").value;
   if (!cur) return;
   if (!isValidPlayDate(date)) {
-    await showModal("관극 날짜는 2026년 10월 1일부터 12월 13일 사이(월요일 제외)만 선택할 수 있어요.", {confirmMode: false});
+    await showModal("관극 날짜는 2026년 10월 1일부터 12월 13일 사이(일반 월요일 제외)만 선택할 수 있어요.", {confirmMode: false});
     return;
   }
   const dbl = $("fDouble").checked;
@@ -595,6 +628,235 @@ $("newBoard").onclick = async () => {
   state.boards.push({id:nextId, visits:[], ended:false, reward8:"지정 폴라로이드 1매"});
   save(); render();
 };
+
+// 기록 백업 (.json 파일 다운로드)
+$("btnExport").onclick = async () => {
+  try {
+    const dataStr = JSON.stringify(state, null, 2);
+    const blob = new Blob([dataStr], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `spacesky-backup-${todayStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    await showModal("인앱 브라우저에서는 파일 다운로드가 제한될 수 있어요. 기본 브라우저에서 열어 백업해 주세요.", {confirmMode: false});
+  }
+};
+
+// 기록 불러오기
+$("btnImport").onclick = () => {
+  $("importFile").value = "";
+  $("importFile").click();
+};
+
+$("importFile").onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (!parsed || !Array.isArray(parsed.boards)) {
+        await showModal("올바른 SPACE SKY 백업 파일이 아닙니다.", {confirmMode: false});
+        return;
+      }
+      if (!(await showModal("백업 파일을 불러오면 현재 화면의 기록이 백업 데이터로 덮어씌워집니다. 계속할까요?"))) {
+        return;
+      }
+      parsed.boards.forEach(b => {
+        if (!b.reward8) b.reward8 = "지정 폴라로이드 1매";
+        if (!Array.isArray(b.visits)) b.visits = [];
+      });
+      state = parsed;
+      save();
+      render();
+      await showModal("관극 기록과 도장판을 성공적으로 복원했습니다!", {confirmMode: false});
+    } catch (err) {
+      await showModal("백업 파일을 읽는 중 오류가 발생했습니다.", {confirmMode: false});
+    }
+  };
+  reader.readAsText(file);
+};
+
+// 도장판만 모아서 PNG 이미지로 렌더링 및 저장
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+$("btnSaveImg").onclick = async () => {
+  if (!state.boards.length) {
+    await showModal("저장할 도장판이 없습니다.", {confirmMode: false});
+    return;
+  }
+
+  const dpr = 2;
+  const W = 720;
+  const pad = 32;
+  const headerH = 128;
+  const cardH = 172;
+  const gap = 16;
+  const footerH = 44;
+  const boards = [...state.boards]; // #1부터 순서대로 표시
+  const totalStamps = boards.reduce((a, b) => a + cnt(b), 0);
+  const H = pad + headerH + 20 + boards.length * (cardH + gap) - gap + footerH + pad;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+
+  // 배경
+  ctx.fillStyle = "#eef3f8";
+  ctx.fillRect(0, 0, W, H);
+
+  // 상단 헤더 카드 (SPACE SKY 테마)
+  const grad = ctx.createLinearGradient(pad, pad, W - pad, pad + headerH);
+  grad.addColorStop(0, "#3d5c78");
+  grad.addColorStop(1, "#6789a6");
+  roundRect(ctx, pad, pad, W - pad * 2, headerH, 22);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // 헤더 별빛 장식
+  ctx.fillStyle = "rgba(255,255,255,0.65)";
+  ctx.font = "14px sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText("✦ ✧ · ˚ ✦", W - pad - 24, pad + 34);
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.font = "600 12px sans-serif";
+  ctx.fillText("✦ FOR SPACE SKY VISITORS", pad + 26, pad + 36);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 30px Georgia, serif";
+  ctx.fillText("SPACE SKY Visitor Card", pad + 26, pad + 74);
+
+  ctx.fillStyle = "rgba(255,255,255,0.92)";
+  ctx.font = "600 14px sans-serif";
+  ctx.fillText(`총 ${boards.length}장 보유 · 누적 도장 ${totalStamps}개`, pad + 26, pad + 104);
+
+  // 각 도장판 카드 그리기
+  let y = pad + headerH + 20;
+  boards.forEach(b => {
+    const c = cnt(b);
+    const r8 = b.reward8 || "지정 폴라로이드 1매";
+    const short8 = r8.includes("OST") ? "미니 OST" : "폴라 1매";
+
+    // 카드 바탕
+    roundRect(ctx, pad, y, W - pad * 2, cardH, 18);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+    ctx.lineWidth = b.ended ? 1.5 : 2;
+    ctx.strokeStyle = b.ended ? "#dce3eb" : "#5a7d9c";
+    ctx.stroke();
+
+    // 카드 제목 및 상태 배지
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#1d2b38";
+    ctx.font = "bold 17px sans-serif";
+    ctx.fillText(`SPACE SKY Visitor Card #${b.id}`, pad + 22, y + 34);
+
+    // 상태 배지
+    const statusText = b.ended ? "완료/종료" : "진행 중";
+    ctx.font = "bold 12px sans-serif";
+    const badgeW = 68;
+    roundRect(ctx, W - pad - 22 - badgeW, y + 17, badgeW, 24, 12);
+    ctx.fillStyle = b.ended ? "#f1f5f9" : "#e7eff6";
+    ctx.fill();
+    ctx.fillStyle = b.ended ? "#647585" : "#3f5e7a";
+    ctx.textAlign = "center";
+    ctx.fillText(statusText, W - pad - 22 - badgeW / 2, y + 33);
+
+    // 메타 정보 (도장 수 & 8회 선택 혜택)
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#647585";
+    ctx.font = "13px sans-serif";
+    ctx.fillText(`${c} / 8개 적립 · 8회 특전: ${r8}`, pad + 22, y + 57);
+
+    // 도장 8개 원 그리기
+    const innerW = W - pad * 2 - 44;
+    const step = innerW / 8;
+    const radius = 25;
+    const cy = y + 104;
+
+    for (let i = 1; i <= 8; i++) {
+      const cx = pad + 22 + step * (i - 0.5);
+      const isOn = i <= c;
+      const isMs = (i === 4 || i === 6 || i === 8);
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fillStyle = isOn ? "#3f5e7a" : "#f5f8fb";
+      ctx.fill();
+
+      if (isMs) {
+        ctx.setLineDash([]);
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = "#e2c275";
+        ctx.stroke();
+      } else if (!isOn) {
+        ctx.setLineDash([4, 3]);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "#cbd5e1";
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 원 내부 텍스트
+      ctx.textAlign = "center";
+      ctx.fillStyle = isOn ? "#ffffff" : "#647585";
+      ctx.font = isOn ? "bold 16px sans-serif" : "600 13px sans-serif";
+      ctx.fillText(isOn ? "✦" : String(i), cx, cy + 5);
+
+      // 하단 혜택 라벨 (4, 6, 8회)
+      if (isMs) {
+        const label = i === 4 ? "40% 1매" : i === 6 ? "50% 1매" : short8;
+        ctx.fillStyle = isOn ? "#2f7d5b" : "#647585";
+        ctx.font = isOn ? "bold 11px sans-serif" : "11px sans-serif";
+        ctx.fillText(label, cx, cy + radius + 17);
+      }
+    }
+
+    y += cardH + gap;
+  });
+
+  // 하단 워터마크/날짜
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#7b8a99";
+  ctx.font = "12px sans-serif";
+  ctx.fillText(`2026.10.01 - 12.13 · 저장일 ${todayStr}`, W / 2, H - pad - 8);
+
+  const dataUrl = canvas.toDataURL("image/png");
+  $("previewImg").src = dataUrl;
+  $("imgDownloadLink").href = dataUrl;
+  $("imgDownloadLink").download = `spacesky-stamps-${todayStr}.png`;
+  $("imgModalBackdrop").classList.add("open");
+
+  // PC/일반 브라우저에서는 즉시 자동 다운로드도 함께 시도
+  try {
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = `spacesky-stamps-${todayStr}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (e) {}
+};
+
+$("imgModalClose").onclick = () => $("imgModalBackdrop").classList.remove("open");
+$("imgModalBackdrop").onclick = e => { if (e.target === $("imgModalBackdrop")) $("imgModalBackdrop").classList.remove("open"); };
 
 $("boards").onclick = async e => {
   const btn = e.target.closest("button");
