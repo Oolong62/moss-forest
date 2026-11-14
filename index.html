@@ -43,11 +43,23 @@ h2{margin:0 0 14px;font-size:19px}
 
 /* 보유 혜택 현황 그리드 */
 .inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.inv-box{background:var(--empty);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.inv-box{
+  background:var(--empty);border:1px solid var(--line);border-radius:14px;padding:12px 14px;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
 .inv-box span{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
 .inv-box b{font-size:20px;color:var(--ink)}
 .inv-box small{display:block;font-size:11px;color:var(--sub);margin-top:2px}
 .inv-box.has{border-color:var(--sky2);background:var(--soft)}
+.inv-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.inv-ctrl{display:flex;align-items:center;gap:4px}
+.inv-btn{
+  width:26px;height:26px;border-radius:8px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);font-weight:700;font-size:15px;
+  display:grid;place-items:center;padding:0;line-height:1;transition:.12s;
+}
+.inv-btn:hover:not(:disabled){border-color:var(--sky2);background:var(--sky);color:#fff}
+.inv-btn:disabled{opacity:.35;cursor:not-allowed}
 
 /* 도장 원 스타일 (날짜 포함) */
 .stamps{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin:8px 0 24px}
@@ -213,7 +225,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
   <section class="card">
     <h2>보유 혜택 현황</h2>
     <div class="inv-grid" id="invGrid"></div>
-    <p class="note">도장 개수가 4회·6회·8회에 도달하면 자동으로 수령 처리되며, 할인권은 관극 기록 시 사용하면 차감</p>
+    <p class="note">도장 개수가 4회·6회·8회에 도달하면 자동으로 수령 처리되며, <b>- / +</b> 버튼으로 보유 수량을 직접 늘리거나 차감할 수도 있어요.</p>
   </section>
 
   <section class="card">
@@ -317,7 +329,10 @@ try {
           JSON.parse(localStorage.getItem("spacesky-visitor-card-v1"));
 } catch (e) {}
 if (!state || !Array.isArray(state.boards) || state.boards.length === 0) {
-  state = {boards:[{id:1, visits:[], ended:false, reward8:"지정 폴라로이드 1매"}]};
+  state = {boards:[{id:1, visits:[], ended:false, reward8:"지정 폴라로이드 1매"}], manualAdj:{}};
+}
+if (!state.manualAdj || typeof state.manualAdj !== "object") {
+  state.manualAdj = {};
 }
 state.boards.forEach((b, idx) => {
   if (!b.id) b.id = idx + 1;
@@ -449,10 +464,10 @@ $("calGrid").onclick = e => {
 
 function getInventory() {
   const inv = {
-    "40% 할인권 1매": {claimed: 0, used: 0},
-    "50% 할인권 1매": {claimed: 0, used: 0},
-    "지정 폴라로이드 1매": {claimed: 0, used: 0},
-    "미니 실황 OST": {claimed: 0, used: 0}
+    "40% 할인권 1매": {claimed: 0, used: 0, adj: Number(state.manualAdj["40% 할인권 1매"]) || 0},
+    "50% 할인권 1매": {claimed: 0, used: 0, adj: Number(state.manualAdj["50% 할인권 1매"]) || 0},
+    "지정 폴라로이드 1매": {claimed: 0, used: 0, adj: Number(state.manualAdj["지정 폴라로이드 1매"]) || 0},
+    "미니 실황 OST": {claimed: 0, used: 0, adj: Number(state.manualAdj["미니 실황 OST"]) || 0}
   };
   state.boards.forEach(b => {
     const c = cnt(b);
@@ -531,17 +546,31 @@ function render() {
 
   $("invGrid").innerHTML = Object.entries(inv).map(([name, stat]) => {
     if (is8Reward(name)) {
-      return `<div class="inv-box ${stat.claimed > 0 ? "has" : ""}">
+      const totalGot = Math.max(0, stat.claimed + stat.adj);
+      return `<div class="inv-box ${totalGot > 0 ? "has" : ""}">
         <span>${name}</span>
-        <b>${stat.claimed}개 <small style="display:inline;font-weight:400">수령</small></b>
+        <div class="inv-row">
+          <b>${totalGot}개 <small style="display:inline;font-weight:400">수령</small></b>
+          <div class="inv-ctrl">
+            <button type="button" class="inv-btn" data-inv="${esc(name)}" data-delta="-1" ${totalGot <= 0 ? "disabled" : ""} aria-label="수량 줄이기">-</button>
+            <button type="button" class="inv-btn" data-inv="${esc(name)}" data-delta="1" aria-label="수량 늘리기">+</button>
+          </div>
+        </div>
+        ${stat.adj !== 0 ? `<small>직접 조정 ${stat.adj > 0 ? "+" + stat.adj : stat.adj}개</small>` : ""}
       </div>`;
     }
 
-    const rem = Math.max(0, stat.claimed - stat.used);
+    const rem = Math.max(0, stat.claimed + stat.adj - stat.used);
     return `<div class="inv-box ${rem > 0 ? "has" : ""}">
       <span>${name}</span>
-      <b>${rem}개 <small style="display:inline;font-weight:400">남음</small></b>
-      <small>사용 ${stat.used}개</small>
+      <div class="inv-row">
+        <b>${rem}개 <small style="display:inline;font-weight:400">남음</small></b>
+        <div class="inv-ctrl">
+          <button type="button" class="inv-btn" data-inv="${esc(name)}" data-delta="-1" ${rem <= 0 ? "disabled" : ""} aria-label="수량 줄이기">-</button>
+          <button type="button" class="inv-btn" data-inv="${esc(name)}" data-delta="1" aria-label="수량 늘리기">+</button>
+        </div>
+      </div>
+      <small>사용 ${stat.used}개${stat.adj !== 0 ? ` · 조정 ${stat.adj > 0 ? "+" + stat.adj : stat.adj}` : ""}</small>
     </div>`;
   }).join("");
 
@@ -549,7 +578,7 @@ function render() {
   let opts = `<option value="">사용 안 함</option>`;
   Object.entries(inv).forEach(([name, stat]) => {
     if (is8Reward(name)) return;
-    const rem = stat.claimed - stat.used;
+    const rem = Math.max(0, stat.claimed + stat.adj - stat.used);
     if (rem > 0) {
       opts += `<option value="${esc(name)}">${esc(name)} 사용 (현재 ${rem}개 보유)</option>`;
     }
@@ -619,6 +648,27 @@ function render() {
     </div>`;
   }).join("");
 }
+
+// 보유 혜택 수량 직접 조절 (- / +)
+$("invGrid").onclick = e => {
+  const btn = e.target.closest("[data-inv]");
+  if (!btn || btn.disabled) return;
+  const name = btn.dataset.inv;
+  const delta = Number(btn.dataset.delta) || 0;
+  const inv = getInventory();
+  const stat = inv[name];
+  if (!stat) return;
+
+  const is8Reward = name === "지정 폴라로이드 1매" || name === "미니 실황 OST";
+  const currentVal = is8Reward
+    ? Math.max(0, stat.claimed + stat.adj)
+    : Math.max(0, stat.claimed + stat.adj - stat.used);
+
+  if (delta < 0 && currentVal <= 0) return;
+  state.manualAdj[name] = (Number(state.manualAdj[name]) || 0) + delta;
+  save();
+  render();
+};
 
 $("msList").onclick = e => {
   const cur = active();
@@ -701,6 +751,9 @@ $("importFile").onchange = e => {
       }
       if (!(await showModal("백업 파일을 불러오면 현재 화면의 기록이 백업 데이터로 덮어씌워집니다. 계속할까요?"))) {
         return;
+      }
+      if (!parsed.manualAdj || typeof parsed.manualAdj !== "object") {
+        parsed.manualAdj = {};
       }
       parsed.boards.forEach((b, idx) => {
         if (!b.id) b.id = idx + 1;
