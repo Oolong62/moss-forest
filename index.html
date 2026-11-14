@@ -119,6 +119,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
 .dbl{font-size:11px;background:var(--star);color:#2d2308;border-radius:99px;padding:0 7px;margin-left:4px;font-weight:700}
 .used-tag{font-size:11px;background:var(--soft);color:var(--sky2);border:1px solid var(--sky2);border-radius:99px;padding:0 7px;margin-left:4px;font-weight:600}
 .small{background:none;color:var(--sub);padding:4px 6px;font-size:12px;text-decoration:underline}
+.small.edit{color:var(--sky2)}
 .small.danger{color:var(--danger)}
 .board{border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:12px}
 .board.cur{border-color:var(--sky2)}
@@ -136,6 +137,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
 .board-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
 .log{list-style:none;margin:8px 0 0;padding:0;font-size:13px}
 .log li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
+.log-btns{display:flex;align-items:center;gap:2px;flex-shrink:0}
 
 /* 커스텀 날짜 선택기 */
 .date-wrap{position:relative}
@@ -173,7 +175,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
 .cal-day.out:disabled{text-decoration:none}
 .cal-legend{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 
-/* 인앱 브라우저 호환 커스텀 모달 & 이미지 미리보기 모달 */
+/* 모달 공통 & 수정 모달 */
 .modal-backdrop{
   position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;
   display:none;place-items:center;padding:16px;overflow-y:auto;
@@ -181,7 +183,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
 .modal-backdrop.open{display:grid}
 .modal-box{
   background:var(--card);border:1px solid var(--line);border-radius:20px;
-  max-width:400px;width:100%;padding:22px;box-shadow:0 16px 36px rgba(0,0,0,.25);
+  max-width:420px;width:100%;padding:22px;box-shadow:0 16px 36px rgba(0,0,0,.25);
 }
 .modal-msg{margin:0 0 18px;font-size:15px;line-height:1.5;white-space:pre-line;color:var(--ink)}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end}
@@ -189,6 +191,9 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
 .modal-cancel{background:var(--soft);color:var(--ink)}
 .modal-ok{background:var(--sky);color:#fff}
 .modal-ok.danger{background:var(--danger)}
+
+.edit-form{display:grid;gap:12px;margin:12px 0 18px}
+.edit-form .chk{font-size:14px}
 
 .img-preview-box{max-width:460px;text-align:center}
 .img-preview-box img{
@@ -286,13 +291,45 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
   </section>
 </div>
 
-<!-- 인앱 브라우저 호환 커스텀 모달 -->
+<!-- 인앱 브라우저 호환 확인 모달 -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal-box">
     <p class="modal-msg" id="modalMsg"></p>
     <div class="modal-btns">
       <button type="button" class="modal-cancel" id="modalCancel">취소</button>
       <button type="button" class="modal-ok" id="modalOk">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 관극 기록 수정 모달 -->
+<div class="modal-backdrop" id="editModalBackdrop">
+  <div class="modal-box">
+    <b style="font-size:17px" id="editModalTitle">관극 기록 수정</b>
+    <div class="edit-form">
+      <div>
+        <label for="eDate">관극 날짜 (10/1 ~ 12/13)</label>
+        <select id="eDate"></select>
+      </div>
+      <div>
+        <label for="eRound">회차 / 시간 (선택)</label>
+        <input id="eRound" placeholder="예: 19:00 / 낮공">
+      </div>
+      <div>
+        <label for="eUseBenefit">이번 관극에 사용한 혜택</label>
+        <select id="eUseBenefit"></select>
+      </div>
+      <div>
+        <label for="eNote">기록 메모 (선택)</label>
+        <input id="eNote" placeholder="캐스팅이나 간단한 메모">
+      </div>
+      <div>
+        <label class="chk"><input type="checkbox" id="eDouble"> 더블 적립 (도장 2개 찍기)</label>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button type="button" class="modal-cancel" id="editCancel">취소</button>
+      <button type="button" class="modal-ok" id="editSave">저장하기</button>
     </div>
   </div>
 </div>
@@ -382,6 +419,22 @@ function isValidPlayDate(str) {
   if (str === "2026-10-05") return true;
   const dow = parseDateStr(str).getDay();
   return dow !== 1;
+}
+
+// 수정 모달용 유효 날짜 옵션 채우기
+function populateValidDateSelect(selEl, selectedStr) {
+  let opts = "";
+  for (let m = 10; m <= 12; m++) {
+    const daysInMonth = new Date(2026, m, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const str = formatDateStr(2026, m, d);
+      if (!isValidPlayDate(str)) continue;
+      const dow = parseDateStr(str).getDay();
+      const hol = HOLIDAYS[str];
+      opts += `<option value="${str}" ${str === selectedStr ? "selected" : ""}>${str} (${DOW_KO[dow]})${hol ? " · " + hol : ""}</option>`;
+    }
+  }
+  selEl.innerHTML = opts;
 }
 
 const t = new Date();
@@ -619,7 +672,10 @@ function render() {
     const log = b.visits.map((v, i) =>
       `<li>
         <span>${i + 1}회${v.s === 2 ? '<em class="dbl">더블 +2</em>' : ""}${v.usedBenefit ? `<em class="used-tag">${esc(v.usedBenefit)} 사용</em>` : ""} · ${esc(v.date)}${v.round ? " · " + esc(v.round) : ""}${v.note ? " — " + esc(v.note) : ""}</span>
-        <button type="button" class="small" data-del="${b.id}:${i}">삭제</button>
+        <span class="log-btns">
+          <button type="button" class="small edit" data-edit="${b.id}:${i}">수정</button>
+          <button type="button" class="small" data-del="${b.id}:${i}">삭제</button>
+        </span>
       </li>`).join("");
 
     const statusPills = bMiles.map(m => {
@@ -703,6 +759,75 @@ $("add").onclick = async () => {
   $("fDouble").checked = false;
   $("fUseBenefit").value = "";
   save(); render();
+};
+
+// 관극 기록 수정 모달 로직
+let editingTarget = null;
+function openEditModal(boardId, visitIdx) {
+  const b = state.boards.find(x => x.id === boardId);
+  if (!b || !b.visits[visitIdx]) return;
+  const v = b.visits[visitIdx];
+  editingTarget = {boardId, visitIdx};
+
+  $("editModalTitle").textContent = `Card #${boardId} · ${visitIdx + 1}회차 기록 수정`;
+  populateValidDateSelect($("eDate"), v.date);
+  $("eRound").value = v.round || "";
+  $("eNote").value = v.note || "";
+  $("eDouble").checked = Number(v.s) === 2;
+
+  const inv = getInventory();
+  const is8Reward = name => name === "지정 폴라로이드 1매" || name === "미니 실황 OST";
+  let opts = `<option value="">사용 안 함</option>`;
+  Object.entries(inv).forEach(([name, stat]) => {
+    if (is8Reward(name)) return;
+    const rem = Math.max(0, stat.claimed + stat.adj - stat.used);
+    if (rem > 0 || v.usedBenefit === name) {
+      const label = v.usedBenefit === name
+        ? `${name} 사용 (현재 선택됨)`
+        : `${name} 사용 (현재 ${rem}개 보유)`;
+      opts += `<option value="${esc(name)}" ${v.usedBenefit === name ? "selected" : ""}>${esc(label)}</option>`;
+    }
+  });
+  $("eUseBenefit").innerHTML = opts;
+  $("editModalBackdrop").classList.add("open");
+}
+
+function closeEditModal() {
+  $("editModalBackdrop").classList.remove("open");
+  editingTarget = null;
+}
+
+$("editCancel").onclick = closeEditModal;
+$("editModalBackdrop").onclick = e => { if (e.target === $("editModalBackdrop")) closeEditModal(); };
+
+$("editSave").onclick = async () => {
+  if (!editingTarget) return;
+  const {boardId, visitIdx} = editingTarget;
+  const b = state.boards.find(x => x.id === boardId);
+  if (!b || !b.visits[visitIdx]) { closeEditModal(); return; }
+
+  const newDate = $("eDate").value;
+  if (!isValidPlayDate(newDate)) {
+    await showModal("관극 날짜는 2026년 10월 1일부터 12월 13일 사이만 선택할 수 있어요.", {confirmMode: false});
+    return;
+  }
+
+  const otherStamps = b.visits.reduce((sum, item, idx) => idx === visitIdx ? sum : sum + (Number(item.s) || 1), 0);
+  const wantStamps = $("eDouble").checked ? 2 : 1;
+  const finalStamps = Math.max(1, Math.min(wantStamps, MAX - otherStamps));
+
+  b.visits[visitIdx] = {
+    date: newDate,
+    round: $("eRound").value.trim(),
+    note: $("eNote").value.trim(),
+    s: finalStamps,
+    usedBenefit: $("eUseBenefit").value
+  };
+
+  if (cnt(b) >= MAX) b.ended = true;
+  save();
+  closeEditModal();
+  render();
 };
 
 $("newBoard").onclick = async () => {
@@ -958,6 +1083,10 @@ $("boards").onclick = async e => {
   if (!btn) return;
   const d = btn.dataset;
 
+  if (d.edit) {
+    const [id, i] = d.edit.split(":").map(Number);
+    openEditModal(id, i);
+  }
   if (d.del) {
     const [id, i] = d.del.split(":").map(Number);
     const b = state.boards.find(x => x.id === id);
