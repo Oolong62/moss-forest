@@ -244,7 +244,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
           </div>
         </div>
       </div>
-      <div><label for="fRound">회차 / 시간 (선택)</label><input id="fRound" placeholder="예: 19:30 / 낮공"></div>
+      <div><label for="fRound">회차 / 시간 (선택)</label><input id="fRound" placeholder="예: 19:00 / 낮공"></div>
       <div class="full">
         <label for="fUseBenefit">이번 관극에 사용한 혜택</label>
         <select id="fUseBenefit"></select>
@@ -716,7 +716,7 @@ $("importFile").onchange = e => {
   reader.readAsText(file);
 };
 
-// 도장판만 모아서 PNG 이미지로 렌더링 및 저장 (도장 안에 날짜 표시)
+// 도장판만 모아서 PNG 이미지로 렌더링 및 저장
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -742,6 +742,7 @@ $("btnSaveImg").onclick = async () => {
   const footerH = 44;
   const boards = [...state.boards];
   const totalStamps = boards.reduce((a, b) => a + cnt(b), 0);
+  const totalVisits = boards.reduce((a, b) => a + b.visits.length, 0);
   const H = pad + headerH + 20 + boards.length * (cardH + gap) - gap + footerH + pad;
 
   const canvas = document.createElement("canvas");
@@ -776,7 +777,7 @@ $("btnSaveImg").onclick = async () => {
 
   ctx.fillStyle = "rgba(255,255,255,0.92)";
   ctx.font = "600 14px sans-serif";
-  ctx.fillText(`총 ${boards.length}장 보유 · 누적 도장 ${totalStamps}개`, pad + 26, pad + 104);
+  ctx.fillText(`총 ${boards.length}장 보유 · 총 관극 ${totalVisits}회 · 누적 도장 ${totalStamps}개`, pad + 26, pad + 104);
 
   let y = pad + headerH + 20;
   boards.forEach(b => {
