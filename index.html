@@ -48,14 +48,22 @@ h2{margin:0 0 14px;font-size:19px}
 .inv-box small{display:block;font-size:11px;color:var(--sub);margin-top:2px}
 .inv-box.has{border-color:var(--sky2);background:var(--soft)}
 
+/* 도장 원 스타일 (날짜 포함) */
 .stamps{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin:8px 0 24px}
-.st{aspect-ratio:1;border-radius:50%;border:1.5px dashed var(--line);background:var(--empty);display:grid;place-items:center;font-size:13px;color:var(--sub);position:relative}
+.st{
+  aspect-ratio:1;border-radius:50%;border:1.5px dashed var(--line);background:var(--empty);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:13px;color:var(--sub);position:relative;line-height:1.15;
+}
 .st.ms{border:2.5px solid var(--star);border-style:solid}
 .st.on{background:var(--sky);border-color:var(--sky);color:#fff;font-weight:700;animation:pop .35s}
 .st.on.ms{box-shadow:0 0 0 2px var(--star)}
+.st .st-star{font-size:12px;color:var(--star);line-height:1}
+.st .st-date{font-size:11px;font-weight:700;letter-spacing:-0.02em;margin-top:2px}
 .st i{position:absolute;bottom:-19px;font-style:normal;font-size:11px;color:var(--sub);white-space:nowrap}
 @keyframes pop{from{transform:scale(.6)}to{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.st.on{animation:none}}
+
 .bar{height:8px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:14px}
 .bar div{height:100%;background:var(--star);transition:width .3s}
 .ms-list{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
@@ -104,6 +112,8 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
 .board .meta{font-size:13px;color:var(--sub);margin:0 0 10px}
 .board .stamps{margin:0 0 4px;gap:6px}
 .board .st{font-size:11px}
+.board .st .st-star{font-size:10px}
+.board .st .st-date{font-size:10px}
 .board-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .badge-pill{
   font-size:11px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);
@@ -469,11 +479,36 @@ function getMiles(board) {
   ];
 }
 
-function stampsHTML(count, labels, miles) {
+// 각 도장 칸별 짧은 날짜(MM/DD) 추출
+function getStampDates(board) {
+  const dates = [];
+  if (!board || !Array.isArray(board.visits)) return dates;
+  board.visits.forEach(v => {
+    const count = Number(v.s) || 1;
+    const raw = String(v.date || "").trim();
+    const shortDate = /^\d{4}-\d{2}-\d{2}$/.test(raw)
+      ? raw.slice(5).replace("-", "/")
+      : raw.replace("-", "/");
+    for (let k = 0; k < count; k++) {
+      if (dates.length < MAX) dates.push(shortDate);
+    }
+  });
+  return dates;
+}
+
+// 웹 화면 도장판 렌더링 (도장 원 안에 별 + 날짜 표시)
+function stampsHTML(board, labels, miles) {
+  const count = board ? cnt(board) : 0;
+  const stampDates = getStampDates(board);
   let h = "";
   for (let i = 1; i <= MAX; i++) {
     const m = miles.find(x => x.n === i);
-    h += `<div class="st${i <= count ? " on" : ""}${m ? " ms" : ""}">${i <= count ? "✦" : i}${labels && m ? `<i>${m.l}</i>` : ""}</div>`;
+    const isOn = i <= count;
+    const dStr = stampDates[i - 1] || "";
+    const inner = isOn
+      ? `<span class="st-star">✦</span>${dStr ? `<span class="st-date">${esc(dStr)}</span>` : ""}`
+      : `${i}`;
+    h += `<div class="st${isOn ? " on" : ""}${m ? " ms" : ""}">${inner}${labels && m ? `<i>${m.l}</i>` : ""}</div>`;
   }
   return h;
 }
@@ -523,7 +558,7 @@ function render() {
   }
 
   $("curName").textContent = cur ? `Visitor Card #${cur.id}` : "진행 중인 카드 없음";
-  $("curStamps").innerHTML = stampsHTML(count, true, miles);
+  $("curStamps").innerHTML = stampsHTML(cur, true, miles);
   $("bar").style.width = `${count / MAX * 100}%`;
 
   const selected8 = cur ? (cur.reward8 || "지정 폴라로이드 1매") : "지정 폴라로이드 1매";
@@ -572,7 +607,7 @@ function render() {
     return `<div class="board${b.ended ? "" : " cur"}">
       <div class="top"><b>SPACE SKY Visitor Card #${b.id}</b><span class="tag">${b.ended ? "종료" : "진행 중"}</span></div>
       <p class="meta">${c}/${MAX}개 · 혜택 ${gotCnt}개 수령 · 8회 선택 혜택: <b>${esc(b.reward8 || "지정 폴라로이드 1매")}</b></p>
-      <div class="stamps">${stampsHTML(c, false, bMiles)}</div>
+      <div class="stamps">${stampsHTML(b, false, bMiles)}</div>
       <div class="board-badges">${statusPills}</div>
       ${log ? `<ul class="log">${log}</ul>` : ""}
       <div class="board-actions">
@@ -692,18 +727,6 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function getStampDates(board) {
-  const dates = [];
-  board.visits.forEach(v => {
-    const count = Number(v.s) || 1;
-    const shortDate = v.date ? v.date.slice(5).replace("-", "/") : "";
-    for (let k = 0; k < count; k++) {
-      if (dates.length < MAX) dates.push(shortDate);
-    }
-  });
-  return dates;
-}
-
 $("btnSaveImg").onclick = async () => {
   if (!state.boards.length) {
     await showModal("저장할 도장판이 없습니다.", {confirmMode: false});
@@ -817,7 +840,6 @@ $("btnSaveImg").onclick = async () => {
         ctx.setLineDash([]);
       }
 
-      // 원 내부: 적립된 도장은 별(✦) + 날짜(MM/DD), 미적립은 번호 표시
       ctx.textAlign = "center";
       if (isOn) {
         const dateLabel = stampDates[i - 1] || "";
