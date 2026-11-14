@@ -198,7 +198,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
   </section>
 
   <section class="card">
-    <div class="top"><h2>보유 혜택 현황</h2>
+    <h2>보유 혜택 현황</h2>
     <div class="inv-grid" id="invGrid"></div>
     <p class="note">도장 개수가 4회·6회·8회에 도달하면 자동으로 수령 처리되며, 할인권은 관극 기록 시 사용하면 차감</p>
   </section>
@@ -215,7 +215,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
     <h2>관극 기록 추가</h2>
     <div class="form">
       <div class="date-wrap" id="dateWrap">
-        <label for="fDateBtn">관극 날짜 (10/1 ~ 12/13 · 월요일 휴관/10·5 가능)</label>
+        <label for="fDateBtn">관극 날짜 (10/1 ~ 12/13)</label>
         <input id="fDate" type="hidden">
         <button type="button" class="date-btn" id="fDateBtn">
           <span id="fDateLabel">날짜 선택</span>
@@ -229,6 +229,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
           </div>
           <div class="cal-grid" id="calGrid"></div>
           <div class="cal-legend">
+            <span>일반 월요일 불가(10/5 가능)</span>
             <span><b style="color:var(--sat)">토</b> · <b style="color:var(--sun)">일/공휴일</b></span>
           </div>
         </div>
@@ -238,7 +239,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;touch-action:mani
         <label for="fUseBenefit">이번 관극에 사용한 혜택 (선택)</label>
         <select id="fUseBenefit"></select>
       </div>
-      <div class="full"><label for="fNote">기록 메모 (선택)</label><input id="fNote" placeholder="함께 본 캐스팅이나 간단한 메모"></div>
+      <div class="full"><label for="fNote">기록 메모 (선택)</label><input id="fNote" placeholder="캐스팅이나 간단한 메모"></div>
       <div class="full"><label class="chk"><input type="checkbox" id="fDouble"> 더블 적립 (도장 2개 찍기)</label></div>
       <div class="full"><button type="button" class="primary" id="add">관극 기록 추가하고 도장 찍기</button></div>
     </div>
@@ -303,17 +304,19 @@ try {
           JSON.parse(localStorage.getItem("spacesky-visitor-card-v2")) ||
           JSON.parse(localStorage.getItem("spacesky-visitor-card-v1"));
 } catch (e) {}
-if (!state || !state.boards) {
+if (!state || !Array.isArray(state.boards) || state.boards.length === 0) {
   state = {boards:[{id:1, visits:[], ended:false, reward8:"지정 폴라로이드 1매"}]};
 }
-state.boards.forEach(b => {
+state.boards.forEach((b, idx) => {
+  if (!b.id) b.id = idx + 1;
+  if (!Array.isArray(b.visits)) b.visits = [];
   if (!b.reward8) b.reward8 = "지정 폴라로이드 1매";
 });
 
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const cnt = b => b.visits.reduce((a, v) => a + (v.s || 1), 0);
+const cnt = b => b.visits.reduce((a, v) => a + (Number(v.s) || 1), 0);
 const active = () => state.boards.find(b => !b.ended);
 
 // 커스텀 모달
@@ -349,9 +352,9 @@ function formatDateStr(y, m, d) {
 }
 function isValidPlayDate(str) {
   if (!str || str < MIN_DATE || str > MAX_DATE) return false;
-  if (str === "2026-10-05") return true; // 10/5 대체공휴일 선택 가능
+  if (str === "2026-10-05") return true;
   const dow = parseDateStr(str).getDay();
-  return dow !== 1; // 그 외 월요일 불가
+  return dow !== 1;
 }
 
 const t = new Date();
@@ -487,17 +490,13 @@ function render() {
   $("sNext").textContent = !cur ? "새 카드 필요" : next ? `${next.n - count}개` : "달성 완료";
   $("sTotal").textContent = `${total}회`;
 
-  let totalClaimed = 0;
   const is8Reward = name => name === "지정 폴라로이드 1매" || name === "미니 실황 OST";
 
   $("invGrid").innerHTML = Object.entries(inv).map(([name, stat]) => {
-    totalClaimed += stat.claimed;
-
     if (is8Reward(name)) {
       return `<div class="inv-box ${stat.claimed > 0 ? "has" : ""}">
         <span>${name}</span>
         <b>${stat.claimed}개 <small style="display:inline;font-weight:400">수령</small></b>
-        <small>총 수령 ${stat.claimed}개</small>
       </div>`;
     }
 
@@ -505,10 +504,9 @@ function render() {
     return `<div class="inv-box ${rem > 0 ? "has" : ""}">
       <span>${name}</span>
       <b>${rem}개 <small style="display:inline;font-weight:400">남음</small></b>
-      <small>총 수령 ${stat.claimed}개 · 사용 ${stat.used}개</small>
+      <small>사용 ${stat.used}개</small>
     </div>`;
   }).join("");
-  $("totalClaimedTag").textContent = `총 ${totalClaimed}개 수령`;
 
   const prevSel = $("fUseBenefit").value;
   let opts = `<option value="">사용 안 함</option>`;
@@ -643,7 +641,7 @@ $("btnExport").onclick = async () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   } catch (e) {
-    await showModal("인앱 브라우저에서는 파일 다운로드가 제한될 수 있어요. 기본 브라우저에서 열어 백업해 주세요.", {confirmMode: false});
+    await showModal("인앱 브라우저에서는 파일 다운로드가 제한될 수 있어요. 기본 브라우저(사파리·크롬)에서 열어 백업해 주세요.", {confirmMode: false});
   }
 };
 
@@ -667,7 +665,8 @@ $("importFile").onchange = e => {
       if (!(await showModal("백업 파일을 불러오면 현재 화면의 기록이 백업 데이터로 덮어씌워집니다. 계속할까요?"))) {
         return;
       }
-      parsed.boards.forEach(b => {
+      parsed.boards.forEach((b, idx) => {
+        if (!b.id) b.id = idx + 1;
         if (!b.reward8) b.reward8 = "지정 폴라로이드 1매";
         if (!Array.isArray(b.visits)) b.visits = [];
       });
@@ -706,7 +705,7 @@ $("btnSaveImg").onclick = async () => {
   const cardH = 172;
   const gap = 16;
   const footerH = 44;
-  const boards = [...state.boards]; // #1부터 순서대로 표시
+  const boards = [...state.boards];
   const totalStamps = boards.reduce((a, b) => a + cnt(b), 0);
   const H = pad + headerH + 20 + boards.length * (cardH + gap) - gap + footerH + pad;
 
@@ -716,11 +715,9 @@ $("btnSaveImg").onclick = async () => {
   const ctx = canvas.getContext("2d");
   ctx.scale(dpr, dpr);
 
-  // 배경
   ctx.fillStyle = "#eef3f8";
   ctx.fillRect(0, 0, W, H);
 
-  // 상단 헤더 카드 (SPACE SKY 테마)
   const grad = ctx.createLinearGradient(pad, pad, W - pad, pad + headerH);
   grad.addColorStop(0, "#3d5c78");
   grad.addColorStop(1, "#6789a6");
@@ -728,7 +725,6 @@ $("btnSaveImg").onclick = async () => {
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // 헤더 별빛 장식
   ctx.fillStyle = "rgba(255,255,255,0.65)";
   ctx.font = "14px sans-serif";
   ctx.textAlign = "right";
@@ -747,14 +743,12 @@ $("btnSaveImg").onclick = async () => {
   ctx.font = "600 14px sans-serif";
   ctx.fillText(`총 ${boards.length}장 보유 · 누적 도장 ${totalStamps}개`, pad + 26, pad + 104);
 
-  // 각 도장판 카드 그리기
   let y = pad + headerH + 20;
   boards.forEach(b => {
     const c = cnt(b);
     const r8 = b.reward8 || "지정 폴라로이드 1매";
     const short8 = r8.includes("OST") ? "미니 OST" : "폴라 1매";
 
-    // 카드 바탕
     roundRect(ctx, pad, y, W - pad * 2, cardH, 18);
     ctx.fillStyle = "#ffffff";
     ctx.fill();
@@ -762,13 +756,11 @@ $("btnSaveImg").onclick = async () => {
     ctx.strokeStyle = b.ended ? "#dce3eb" : "#5a7d9c";
     ctx.stroke();
 
-    // 카드 제목 및 상태 배지
     ctx.textAlign = "left";
     ctx.fillStyle = "#1d2b38";
     ctx.font = "bold 17px sans-serif";
     ctx.fillText(`SPACE SKY Visitor Card #${b.id}`, pad + 22, y + 34);
 
-    // 상태 배지
     const statusText = b.ended ? "완료/종료" : "진행 중";
     ctx.font = "bold 12px sans-serif";
     const badgeW = 68;
@@ -779,13 +771,11 @@ $("btnSaveImg").onclick = async () => {
     ctx.textAlign = "center";
     ctx.fillText(statusText, W - pad - 22 - badgeW / 2, y + 33);
 
-    // 메타 정보 (도장 수 & 8회 선택 혜택)
     ctx.textAlign = "left";
     ctx.fillStyle = "#647585";
     ctx.font = "13px sans-serif";
     ctx.fillText(`${c} / 8개 적립 · 8회 특전: ${r8}`, pad + 22, y + 57);
 
-    // 도장 8개 원 그리기
     const innerW = W - pad * 2 - 44;
     const step = innerW / 8;
     const radius = 25;
@@ -814,13 +804,11 @@ $("btnSaveImg").onclick = async () => {
         ctx.setLineDash([]);
       }
 
-      // 원 내부 텍스트
       ctx.textAlign = "center";
       ctx.fillStyle = isOn ? "#ffffff" : "#647585";
       ctx.font = isOn ? "bold 16px sans-serif" : "600 13px sans-serif";
       ctx.fillText(isOn ? "✦" : String(i), cx, cy + 5);
 
-      // 하단 혜택 라벨 (4, 6, 8회)
       if (isMs) {
         const label = i === 4 ? "40% 1매" : i === 6 ? "50% 1매" : short8;
         ctx.fillStyle = isOn ? "#2f7d5b" : "#647585";
@@ -832,7 +820,6 @@ $("btnSaveImg").onclick = async () => {
     y += cardH + gap;
   });
 
-  // 하단 워터마크/날짜
   ctx.textAlign = "center";
   ctx.fillStyle = "#7b8a99";
   ctx.font = "12px sans-serif";
@@ -844,7 +831,6 @@ $("btnSaveImg").onclick = async () => {
   $("imgDownloadLink").download = `spacesky-stamps-${todayStr}.png`;
   $("imgModalBackdrop").classList.add("open");
 
-  // PC/일반 브라우저에서는 즉시 자동 다운로드도 함께 시도
   try {
     const a = document.createElement("a");
     a.href = dataUrl;
